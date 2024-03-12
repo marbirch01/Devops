@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-pod
+  labels:
+    app: myapp-pod
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: myapp-pod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: myapp-pod
+    spec:
+      containers:
+      - name: myapp-pod
+        image: marbirch01/getting-started:kube
+        ports:
+        - containerPort: 3000

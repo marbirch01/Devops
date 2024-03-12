@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+ 
+    stages {
+        stage('build') {
+            steps {
+                sh 'if [ -d MDO2024 ]; then rm -rf MDO2024; fi'
+                   sh 'git clone https://github.com/InzynieriaOprogramowaniaAGH/MDO2024.git'
+                   dir('MDO2024'){
+                       sh 'git checkout MB408932'
+                   }
+                   dir('MDO2024/GCL1/MB408932/Sprawozdanie3/Dockerfile'){
+                       sh 'docker system prune -a --force'
+                       sh 'docker build -t simplenodeapp . -f ./dockerfile'
+                   }
+            }
+        }
+        stage('test') {
+            steps{
+                dir('MDO2024/GCL1/MB408932/Sprawozdanie3/Dockerfile'){
+                    sh 'docker build -t simplenodeapp . -f ./dockerfileTest'
+                }
+            }
+        }
+        stage('deploy') {
+            steps{
+                dir('MDO2024/GCL1/MB408932/Sprawozdanie3/Dockerfile'){
+                    sh 'docker build -t simplenodeappdeploy . -f ./dockerfileDeploy'
+                }
+                sh 'docker run --name simpleapp -d -p 3000:3000 simplenodeappdeploy'
+                sh 'docker ps'
+                sh 'sleep 10'
+                sh 'docker logs simpleapp'
+                sh 'docker stop simpleapp'
+                sh 'docker rm simpleapp'
+            }
+        }
+        stage('publish'){
+            steps{
+                sh 'docker tag simplenodeappdeploy marbirch01/getting-started'
+                sh 'docker push marbirch01/getting-started'
+            }
+        }
+    }
+}
